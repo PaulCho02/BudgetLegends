@@ -1,0 +1,384 @@
+/**
+ * @(#)BudgetLegends.java
+ *
+ *
+ * @author 
+ * @version 1.00 2020/4/7
+ */
+
+
+
+    
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.awt.image.*; 
+import java.io.*; 
+import javax.imageio.*; 
+import java.util.*;
+public class BudgetLegends extends JFrame{
+	javax.swing.Timer myTimer; 
+	GamePanel game;
+		
+    public BudgetLegends() {
+		super("Move the Box");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(800,650);
+
+		myTimer = new javax.swing.Timer(10, new TickListener());	 // trigger every 100 ms
+		myTimer.start();
+
+		game = new GamePanel();
+		add(game);
+		setResizable(false);
+		setVisible(true);
+    }
+    
+	class TickListener implements ActionListener{
+		public void actionPerformed(ActionEvent evt){
+			if(game!= null && game.ready){
+				game.move();
+				game.repaint();
+			}			
+		}
+	}
+	
+    public static void main(String[] arguments) {
+		BudgetLegends frame = new BudgetLegends();		
+    }
+}
+
+class GamePanel extends JPanel {
+	private Guy1 p1;
+	private Guy1 p2;
+	private int screen;
+	public boolean ready=false;
+	private boolean []keys;
+	public static final int MENU=1, GAME=2, INSTRUCTIONS=3, CREDIT=4;
+	
+	public GamePanel(){
+		keys = new boolean[KeyEvent.KEY_LAST+1];
+		screen = GAMEx;
+		p1 = new Guy1(380,400,"scorpion",9,1);//last integer is spell
+		p2 = new Guy1(380,400,"scorpion",9,1);
+		addKeyListener(new moveListener());
+		addMouseListener(new clickListener());
+		setSize(800,600);
+		//i will make character list 
+		// will make spell list
+		// so that i can use integer instead of string
+	}
+	
+    public void addNotify() {
+        super.addNotify();
+        requestFocus();
+        ready = true;
+    }
+	public void update(){
+		if (screen == GAME){
+			move();
+		}
+	}
+    public void move() {
+		if(keys[KeyEvent.VK_RIGHT] ){//p1 movement
+			p1.move(5,0);
+		}
+		if(keys[KeyEvent.VK_LEFT] ){
+			p1.move(-5,0);
+		}
+		if(keys[KeyEvent.VK_UP] ){
+			p1.move(0,-5);
+		}
+		if(keys[KeyEvent.VK_DOWN] ){
+			p1.move(0,5);
+		}
+		if(keys[KeyEvent.VK_NUMPAD1] ){//basic attack
+			p1.attack();
+		}
+		if(keys[KeyEvent.VK_NUMPAD2] ){//skill
+			p1.skill();
+		}
+		if(keys[KeyEvent.VK_NUMPAD3] ){//common spell
+			p1.spell();
+		}
+		if(keys[KeyEvent.VK_D] ){//p2 movement
+			p2.move(5,0);
+		}
+		if(keys[KeyEvent.VK_A] ){
+			p2.move(-5,0);
+		}
+		if(keys[KeyEvent.VK_W] ){
+			p2.move(0,-5);
+		}
+		if(keys[KeyEvent.VK_S] ){
+			p2.move(0,5);
+		}
+		if(keys[KeyEvent.VK_C] ){//basic attack
+			p2.attack();
+		}
+		if(keys[KeyEvent.VK_V] ){//skill
+			p2.skill();
+		}
+		if(keys[KeyEvent.VK_B] ){//common spell
+			p2.spell();
+		}
+    }
+    
+    public void drawMenu(Graphics g){
+    	g.setColor(new Color(50,200,222));  
+        g.fillRect(0,0,getWidth(),getHeight()); 
+    }
+    
+    public void drawGame(Graphics g){
+    	g.setColor(new Color(222,255,222));  
+        g.fillRect(0,0,getWidth(),getHeight());  
+        
+		p1.draw(g);
+		p2.draw(g);
+    }
+    
+    public void drawInstructions(Graphics g){
+		g.setColor(new Color(200,200,200));
+		g.fillRect(0,0,800,600);
+	}
+	
+    public void paint(Graphics g){
+    	if(screen == MENU){
+    		drawMenu(g);
+    	}
+    	else if(screen == GAME){
+    		drawGame(g);
+    	}
+    	else if(screen == INSTRUCTIONS){
+    		drawInstructions(g);
+    	}
+		
+    }
+    class clickListener implements MouseListener{
+    	public void mousePressed(MouseEvent e){
+		}
+		public void mouseEntered(MouseEvent e){}
+		public void mouseExited(MouseEvent e){}
+		public void mouseReleased(MouseEvent e){}
+		public void mouseClicked(MouseEvent e){}
+    }
+    class moveListener implements KeyListener{
+	    public void keyTyped(KeyEvent e) {}
+	
+	    public void keyPressed(KeyEvent e) {
+	        keys[e.getKeyCode()] = true;
+	    }
+	    
+	    public void keyReleased(KeyEvent e) {
+	        keys[e.getKeyCode()] = false;
+	    }
+    }    
+}
+
+class Guy1{
+	private int x,y;
+	private Image[]pics;
+	private int dir, frame, delay;
+	private int maxrapid,rapid;
+	private int spell;
+	private String name;
+	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();
+	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, WAIT = 5;
+		
+	public Guy1(int x, int y, String n, int num, int s){
+		this.x=x;
+		this.y=y;
+		dir = RIGHT;
+		frame = 0;
+		delay = 0;
+		name = n;
+		spell = s;
+		rapid = 18;//change to minimum rapid of all characters
+		pics = new Image[num];		
+		for(int i = 0; i<num; i++){
+			pics[i] = new ImageIcon(name+"/"+name+i+".png").getImage();
+		}
+	}
+
+	public void move(int dx,int dy){
+		x += dx;
+		y += dy;
+		if(dx>0){
+			dir = RIGHT;
+		}
+		else if(dx<0){
+			dir = LEFT;
+		}
+		
+		else if(dy>0){
+			dir = DOWN;
+		}
+		else if (dy<0){
+			dir = UP;
+		}
+		delay += 1;
+		if(delay % WAIT == 0){
+			frame = (frame + 1) % pics.length;
+		}
+	}
+	
+	public void attack(){//basic attack
+		if (name == "scorpion"){
+			maxrapid = 24;
+			if (rapid == maxrapid){
+				rapid = 0;
+				bullets.add(new Bullet(x,y,10,dir));
+			}
+		}
+		else if (name == "B"){
+			maxrapid = 18;
+		}
+		else if (name == "C"){
+			maxrapid = 18;
+		}
+		else if (name == "D"){
+			maxrapid = 18;
+		}
+		if (rapid < maxrapid){
+			rapid +=1;
+		}
+		System.out.println(rapid);
+		/*
+		else {
+			rapid --;
+		}*/
+	}
+	public void skill(){
+	}
+	public void spell(){
+	}
+	
+	
+	public void movebullets(){
+		for (Bullet b: bullets){
+			if (b.getbulld() == 0){//bullet moves left
+				b.setbullx(b.getbullx()-b.getbulls());
+			}
+			else if (b.getbulld() == 1){//bullet moves right
+				b.setbullx(b.getbullx()+b.getbulls());
+			}
+			else if (b.getbulld() == 2){//bullet moves up
+				b.setbully(b.getbully()-b.getbulls());
+			}
+			else if (b.getbulld() == 3){//bullet moves down
+				b.setbully(b.getbully()+b.getbulls());
+			}
+			if (b.getbullx()<0){
+				bullets.remove(b);
+			}
+		}
+	}
+	
+	
+	public void draw(Graphics g){
+		if(dir == RIGHT){
+			g.drawImage(pics[frame], x, y, null);
+		}
+		else{
+			int w = pics[frame].getWidth(null);
+			int h = pics[frame].getHeight(null);
+			g.drawImage(pics[frame], x + w, y, -w, h, null);
+		}
+		g.setColor(new Color(0,0,0));
+		for (Bullet b:bullets){
+			g.fillRect(b.getbullx(),b.getbully(),5,5);
+		}
+		
+		movebullets();
+	}
+	
+	
+	class Bullet{
+		private int x,y,speed;
+		private int dir;
+		public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3;
+		public Bullet(int X, int Y, int s,int d){
+			x=X;
+			y = Y;
+			speed = s;
+			dir = d;
+			//System.out.println(d);
+		}
+		public int getbullx(){
+			return x;
+		}
+		public int getbully(){
+			return y;
+		}
+		public int getbulls(){//return the bullet's speed
+			return speed;
+		}
+		public int getbulld(){//return the bullet's direction
+			return dir;
+		}
+		public void setbullx(int X){
+			x = X;
+		}
+		public void setbully(int Y){
+			y = Y;
+		}
+		
+	}
+}
+
+
+
+
+/*
+class Guy2{
+	private int x2,y2;
+	private Image[]pics;
+	private int dir, frame, delay;
+	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, WAIT = 5;
+		
+	public Guy2(int x, int y, String name, int n){
+		this.x2=x;
+		this.y2=y;
+		dir = RIGHT;
+		frame = 0;
+		delay = 0;
+		
+		pics = new Image[n];		
+		for(int i = 0; i<n; i++){
+			pics[i] = new ImageIcon(name+"/"+name+i+".png").getImage();
+		}
+	}
+
+	public void move(int dx,int dy){
+		x2 += dx;
+		y2 += dy;
+		if(dx>0){
+			dir = RIGHT;
+		}
+		else if(dx<0){
+			dir = LEFT;
+		}
+		
+		else if(dy>0){
+			dir = DOWN;
+		}
+		else if (dy<0){
+			dir = UP;
+		}
+		delay += 1;
+		if(delay % WAIT == 0){
+			frame = (frame + 1) % pics.length;
+		}
+	}
+
+	public void draw(Graphics g){
+		if(dir == RIGHT){
+			g.drawImage(pics[frame], x2, y2, null);
+		}
+		else{
+			int w = pics[frame].getWidth(null);
+			int h = pics[frame].getHeight(null);
+			g.drawImage(pics[frame], x2 + w, y2, -w, h, null);
+		}
+	}
+}*/
