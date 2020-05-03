@@ -16,9 +16,14 @@ import java.awt.image.*;
 import java.io.*; 
 import javax.imageio.*; 
 import java.util.*;
+import java.io.File;
+import java.io.IOException; 
+import java.awt.image.BufferedImage; 
+import javax.imageio.ImageIO;
 public class BudgetLegends extends JFrame{
 	javax.swing.Timer myTimer; 
 	GamePanel game;
+	private ArrayList<BufferedImage> maps = new ArrayList<BufferedImage>(); //arraylist of images for the maps for ease of access
 		
     public BudgetLegends() {
 		super("Move the Box");
@@ -44,7 +49,24 @@ public class BudgetLegends extends JFrame{
 	}
 	
     public static void main(String[] arguments) {
-		BudgetLegends frame = new BudgetLegends();		
+    	BudgetLegends frame = new BudgetLegends();
+	
+	//maps
+	String[] mapInput = ["C:\Users\Keon\Desktop\fse\map1","C:\Users\Keon\Desktop\fse\map2","C:\Users\Keon\Desktop\fse\map3","C:\Users\Keon\Desktop\fse\map4"] //image locations jay laptop	
+	int mwidth = 800; //map width
+	int mheight = 650; //msp height
+	for (int i=0;i<4;i++) {
+		BufferedImage map = null;//storing image in ram
+		try {	//reading image
+			File input = new File(mapInput[i]); //4 maps, so each cycle of the for loop will load another map
+			map = new BufferedImage(mwidth,mheight,BufferedImage.TYPE_INT_ARGB);
+			map = ImageIO.read(input);
+		}
+		catch (IOException e) {
+			System.out.println("Error: "+e);
+		}
+		maps.add(map);
+	}
     }
 }
 
