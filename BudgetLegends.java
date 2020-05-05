@@ -255,7 +255,7 @@ class Player{
 	private int player;
 	private int extraspeed;
 	private Image[]pics;
-	private int dir, frame, delay;
+	private int dir, frame, delay, move, newmove;
 	private int maxrapid,rapid;
 	private int basicdamage;
 	private int damage;
