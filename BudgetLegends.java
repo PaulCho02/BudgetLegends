@@ -6,6 +6,20 @@
  * @version 1.00 2020/5/1
  */
 
+/*---------need to do------------
+ menu
+ setting
+ credit screen
+ instruction screen
+ ---------------------------(in game)
+ collision in each maps
+ make energy bolt distance (when it hit, give damage and maybe slowdown
+ spell 'c'(cleanser or all damage x2)
+ skill for character 'c' rn it is just 
+ damage boost -> damage boost and armor maybe
+ 
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -22,7 +36,7 @@ public class BudgetLegends extends JFrame{
     public BudgetLegends() {
 		super("Move the Box");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(1280,900);
+		setSize(1300,900);
 
 		myTimer = new javax.swing.Timer(10, new TickListener());	 // trigger every 100 ms
 		myTimer.start();
@@ -56,21 +70,44 @@ class GamePanel extends JPanel {
 	private boolean []keys;
 	private Point mouse;
 	private Rectangle gamerect,readyrect,instructionrect,creditrect;
+	private Rectangle [] charectarray;
+	private Rectangle [] spellrectarray;
+	private String [] chaarray;
+	private String p1cha,p2cha;
+	private int p1spell,p2spell;
+	private Image [] chaimage;
+	private Image [] spellimage;
 	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTIONS=4, CREDIT=5;
 	private Image buttonUp, buttonDown; 
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
-		screen = GAME;
+		screen = SELECT;
 		buttonUp = new ImageIcon("buttons/button1_up.png").getImage();
 		buttonDown = new ImageIcon("buttons/button1_down.png").getImage();
-		p1 = new Player(380,400,"scorpion",9,4,1);//second last integer is spell,last integer is player number (player 1)
-		p2 = new Player(380,400,"scorpion",9,1,2);//(player 2)
+		p1cha = "scorpion";
+		p2cha = "scorpion";
+		p1spell = 1;
+		p2spell = 1;
+		//p1 = new Player(380,400,"scorpion",9,4,1);//second last integer is spell,last integer is player number (player 1)
+		//p2 = new Player(700,400,"scorpion",9,1,2);//(player 2)
+		instructionrect = new Rectangle (200,100,100,50);
 		gamerect = new Rectangle(400,300,100,50);
-		readyrect = new Rectangle(500,500,100,100);
+		readyrect = new Rectangle(460,30,350,90);
+		chaarray = new String[] {"scorpion","B","C","D"};
 		//setPreferredSize( new Dimension(800, 600));
 		addKeyListener(new moveListener());
 		addMouseListener(new clickListener());
-		setSize(1280,768);
+		setPreferredSize( new Dimension(1280, 768));
+		charectarray = new Rectangle [4]; 
+		spellrectarray = new Rectangle [4];
+		for (int i=380,n = 0; n<4; i+=140,n++){//make character rectangle
+			charectarray[n] = new Rectangle(i,250,120,120);
+		}
+		for (int i=500,n = 0; n<4; i+=75,n++){//make spell rectangle
+			spellrectarray[n] =(new Rectangle(i,430,50,50));
+		}
+		
+		
 		//i will make character list 
 		// will make spell list
 		// so that i can use integer instead of string
@@ -85,9 +122,11 @@ class GamePanel extends JPanel {
 		if (screen == GAME){
 			move();
 		}
-		mouse = MouseInfo.getPointerInfo().getLocation();
-		//Point offset = getLocationOnScreen();
-		//mouse.translate(-offset.x, -offset.y);
+		if (screen != GAME){
+			mouse = MouseInfo.getPointerInfo().getLocation();
+			//Point offset = getLocationOnScreen();
+			//mouse.translate(-offset.x, -offset.y);
+		}
 		
 	}
     public void move() {
@@ -145,22 +184,45 @@ class GamePanel extends JPanel {
     		mousex = e.getX();
     		mousey = e.getY();
     		if(screen == MENU){
-    			
-    			
 				if(instructionrect.contains(mouse)){
-					System.out.println("1234");
-					//screen = INSTRUCTIONS;	
+					screen = SELECT;	
 				}
-				/*
+				
 				if(gamerect.contains(mouse)){
 					screen = SELECT;
-					System.out.println("23");
 				}
-				*/
+				
 			}
 			if (screen == SELECT){//set p1,p2 and map here
 				if (readyrect.contains(mouse)){
+					p1 = new Player(380,400,p1cha,9,p1spell,1);
+					p2 = new Player(700,400,p2cha,9,p2spell,2);
 					screen = GAME;
+				}
+				//using if statement to defined user did right click or left click(left click = p1,right click = p2)
+				if (SwingUtilities.isLeftMouseButton(e)){
+					for (int i = 0; i<4; i++){
+						if (charectarray[i].contains(mouse)){//choose character(click the character rect)
+							p1cha = chaarray[i];
+						}
+						if (spellrectarray[i].contains(mouse)){//choose spell
+							p1spell = i+1;//spell integer is start with 1 not 0
+							System.out.println(p1spell);
+						}
+					}
+				}
+				if (SwingUtilities.isRightMouseButton(e)){
+					System.out.println("right click");
+					for (int i = 0; i<4; i++){
+						if (charectarray[i].contains(mouse)){//choose character(click the character rect)
+							p2cha = chaarray[i];
+						}
+						if (spellrectarray[i].contains(mouse)){//choose spell
+							
+							p2spell = i+1;//spell integer is start with 1 not 0
+							System.out.println(p2spell);
+						}
+					}
 				}
 			}
 			if (screen == INSTRUCTIONS){//blitz screen(image)
@@ -191,9 +253,9 @@ class GamePanel extends JPanel {
 		g.drawImage(img, area.x, area.y, area.width, area.height, null);
     }
     public void drawMenu(Graphics g){
-    	/*
+    	
     	g.setColor(new Color(0xB1C4DF));  
-		g.fillRect(0,0,800,600);
+		g.fillRect(0,0,1100,600);
 		if(instructionrect.contains(mouse)){
 			imageInRect(g, buttonUp, instructionrect);
 		}
@@ -205,11 +267,12 @@ class GamePanel extends JPanel {
 		}
 		else{
 			imageInRect(g, buttonDown, gamerect);
-		}*/
-    	
+		}
+    	/*
     	g.setColor(new Color(50,200,222));  
-        g.fillRect(0,0,getWidth(),getHeight());
+        g.fillRect(0,0,getWidth(),getHeight());*/
         g.setColor(new Color(50,200,50));
+        g.drawRect(instructionrect.x,instructionrect.y,instructionrect.width,instructionrect.height);
         g.drawRect(gamerect.x,gamerect.y,gamerect.width,gamerect.height);
     }
     
@@ -221,6 +284,18 @@ class GamePanel extends JPanel {
     }
     
     public void drawSelect(Graphics g){
+    	g.setColor(new Color(100,100,100));
+    	g.fillRect(0,0,1280,900);
+    	g.setColor(new Color(200,200,255));
+    	for (int i=0; i<4;i++){
+    		g.fillRect(charectarray[i].x,charectarray[i].y,charectarray[i].width,charectarray[i].height);
+    		g.fillRect(spellrectarray[i].x,spellrectarray[i].y,spellrectarray[i].width,spellrectarray[i].height);
+    		//imageInRect(g,chaimage[i],charectarray[i]);
+    		//imageInRect(g,spellimage[i],spellrectarray[i]);
+    	}
+    	g.fillRect(readyrect.x,readyrect.y,readyrect.width,readyrect.height);
+    	
+    	//need code for map(arrow keys)
     	
     }
     
@@ -273,7 +348,7 @@ class Player{
 	private Teleport tp;
 	private Stun stun;
 	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();
-	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, SHOOTL = 4, SHOOTR = 5,SHOOTU = 6,SHOOTD = 7, SKILLL = 8,SKILLR = 9,SKILLU = 10,SKILLD = 11, WAIT = 6;
+	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, SHOOTL = 4, SHOOTR = 5,SHOOTU = 6,SHOOTD = 7, SKILLL = 8,SKILLR = 9,SKILLU = 10,SKILLD = 11, WAIT = 5;
 		
 	public Player(int x, int y, String n, int num, int s, int p){
 		this.x=x;
@@ -441,7 +516,6 @@ class Player{
 		}
 		if (stunned == true){
 			stuncool +=1;
-			System.out.println(stuncool);
 			if (stuncool == 100){
 				stuncool = 0;
 				stunned = false;
@@ -488,7 +562,7 @@ class Player{
 	
 	public void skill(){
 		if (stunned == false){
-			if (name == "scorpion"){
+			if (name == "scorpion"){//energy bolt
 				if (skillcool == maxskillcool){
 					if (dir == LEFT){
 						newmove = SKILLL;
@@ -529,7 +603,7 @@ class Player{
 					skillcool = 0;
 				}*/
 			}
-			else if (name == "B"){
+			else if (name == "B"){//teleport
 				if (skillcool == maxskillcool){
 					if (tp == null){//set position
 						tp = new Teleport(x,y);
@@ -543,7 +617,7 @@ class Player{
 					}
 				}
 			}
-			else if (name == "C"){
+			else if (name == "C"){//damage boost
 				if (skillcool == maxskillcool){
 					damage = basicdamage+15;
 					skillcool = 0;
@@ -569,7 +643,6 @@ class Player{
 					}
 					skillcool = 0;
 				}
-			
 			}
 		}
 	}
@@ -621,8 +694,7 @@ class Player{
 		ArrayList<Bullet> blist = enemy.getBullets();
 		String enemycha = enemy.getName();//enemy character
 		for (Bullet b: blist){//check basic attack
-			if (b != null){/////////
-			
+			if (b != null){
 				int p = blist.indexOf(b);
 				if (enemycha == "scorpion"){
 					bullrect = new Rectangle(b.getbullx(),b.getbully(),5,5);
@@ -645,8 +717,7 @@ class Player{
 				else if (enemycha == "D"){
 					//bullrect = Rectangle()
 				}
-			}///////////
-				
+			}				
 		}
 		if (enemycha == "scorpion"){
 			if (enemy.getStun() != null){
@@ -712,11 +783,7 @@ class Player{
 						enemy.setStun();
 				}
 			}
-		}
-				
-							
-					
-		
+		}							
 	}
 	
 	public void movebullets(){//not only bullets ,skills..etc
@@ -772,19 +839,19 @@ class Player{
 	
 	
 	public void draw(Graphics g){
-		g.drawImage(pics[newmove][(int)frame], x, y, null);
+		g.drawImage(pics[newmove][(int)frame], x, y, null);//draw character
 
-		g.setColor(new Color(0,0,0));
+		g.setColor(new Color(0,0,0));//black
 		for (Bullet b:bullets){//draw bullets
 			if (b!=null){
-				g.fillRect(b.getbullx(),b.getbully(),5,5);
+				g.fillRect(b.getbullx(),b.getbully(),5,5);//need to change to image
 			}
 		}
 		if (energyb != null){//draw energy bolt
-			g.fillRect(energyb.getebx(),energyb.geteby(),10,10);
+			g.fillRect(energyb.getebx(),energyb.geteby(),10,10);//need to change to image
 		}
 		if (stun != null){//draw stunshot
-			g.fillRect(stun.getx(),stun.gety(),15,15);
+			g.fillRect(stun.getx(),stun.gety(),15,15);//need to change to image
 		}
 		g.setColor(new Color(255,0,0));//red
 		if (player == 1){
@@ -795,13 +862,11 @@ class Player{
 		}
 		g.setColor(new Color(0,255,0));//green
 		if (player == 1){
-			//System.out.println(double(health/maxhealth));
 			g.fillRect(30,30,(int)((double)health/(double)maxhealth*500),50);//health bar
 		}
 		else if (player == 2){
 			g.fillRect(740,30,(int)((double)health/(double)maxhealth*500),50);
-		}
-		
+		} 
 		movebullets();
 	}
 	
@@ -907,58 +972,3 @@ class Player{
 }
 
 
-
-
-/*
-class Guy2{
-	private int x2,y2;
-	private Image[]pics;
-	private int dir, frame, delay;
-	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, WAIT = 5;
-		
-	public Guy2(int x, int y, String name, int n){
-		this.x2=x;
-		this.y2=y;
-		dir = RIGHT;
-		frame = 0;
-		delay = 0;
-		
-		pics = new Image[n];		
-		for(int i = 0; i<n; i++){
-			pics[i] = new ImageIcon(name+"/"+name+i+".png").getImage();
-		}
-	}
-
-	public void move(int dx,int dy){
-		x2 += dx;
-		y2 += dy;
-		if(dx>0){
-			dir = RIGHT;
-		}
-		else if(dx<0){
-			dir = LEFT;
-		}
-		
-		else if(dy>0){
-			dir = DOWN;
-		}
-		else if (dy<0){
-			dir = UP;
-		}
-		delay += 1;
-		if(delay % WAIT == 0){
-			frame = (frame + 1) % pics.length;
-		}
-	}
-
-	public void draw(Graphics g){
-		if(dir == RIGHT){
-			g.drawImage(pics[frame], x2, y2, null);
-		}
-		else{
-			int w = pics[frame].getWidth(null);
-			int h = pics[frame].getHeight(null);
-			g.drawImage(pics[frame], x2 + w, y2, -w, h, null);
-		}
-	}
-}*/
