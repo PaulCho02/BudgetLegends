@@ -7,11 +7,13 @@
  */
 
 /*---------need to do------------
- menu
- setting
- credit screen
- instruction screen
+ menu 40%
+ setting 60%
+ credit screen 0%
+ instruction screen 0%
+ music and sound 0%
  ---------------------------(in game)
+ characters sprites
  collision in each maps
  make energy bolt distance (when it hit, give damage and maybe slowdown
  spell 'c'(cleanser or all damage x2)
@@ -72,8 +74,11 @@ class GamePanel extends JPanel {
 	private Rectangle gamerect,readyrect,instructionrect,creditrect;
 	private Rectangle [] charectarray;
 	private Rectangle [] spellrectarray;
-	private String [] chaarray;
-	private String p1cha,p2cha;
+	private Rectangle p1charect;
+	private Rectangle p2charect;
+	private Rectangle p1spellrect;
+	private Rectangle p2spellrect;
+	private int p1cha,p2cha;
 	private int p1spell,p2spell;
 	private Image [] chaimage;
 	private Image [] spellimage;
@@ -81,19 +86,26 @@ class GamePanel extends JPanel {
 	private Image buttonUp, buttonDown; 
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
-		screen = SELECT;
+		screen = MENU;
 		buttonUp = new ImageIcon("buttons/button1_up.png").getImage();
 		buttonDown = new ImageIcon("buttons/button1_down.png").getImage();
-		p1cha = "scorpion";
-		p2cha = "scorpion";
+		p1cha = 0;
+		p2cha = 0;
 		p1spell = 1;
 		p2spell = 1;
-		//p1 = new Player(380,400,"scorpion",9,4,1);//second last integer is spell,last integer is player number (player 1)
-		//p2 = new Player(700,400,"scorpion",9,1,2);//(player 2)
-		instructionrect = new Rectangle (200,100,100,50);
-		gamerect = new Rectangle(400,300,100,50);
+		
+		chaimage = new Image[] {new ImageIcon("yellow/yellowwalkDown1.png").getImage(),new ImageIcon("yellow/yellowwalkL1.png").getImage(),
+					new ImageIcon("yellow/yellowwalkR1.png").getImage(),new ImageIcon("yellow/yellowwalkUp1.png").getImage()};//need to change to each character image
+		//spellimage = 
+		
+		instructionrect = new Rectangle (400,200,200,50);
+		creditrect = new Rectangle (400,300,200,50);
+		gamerect = new Rectangle(400,400,200,50);
 		readyrect = new Rectangle(460,30,350,90);
-		chaarray = new String[] {"scorpion","B","C","D"};
+		p1charect = new Rectangle(50,150,250,300);
+		p2charect = new Rectangle(950,150,250,300);
+		p1spellrect = new Rectangle(100,600,100,100);
+		p2spellrect = new Rectangle(950,600,100,100);
 		//setPreferredSize( new Dimension(800, 600));
 		addKeyListener(new moveListener());
 		addMouseListener(new clickListener());
@@ -101,16 +113,11 @@ class GamePanel extends JPanel {
 		charectarray = new Rectangle [4]; 
 		spellrectarray = new Rectangle [4];
 		for (int i=380,n = 0; n<4; i+=140,n++){//make character rectangle
-			charectarray[n] = new Rectangle(i,250,120,120);
+			charectarray[n] = new Rectangle(i,550,120,120);
 		}
 		for (int i=500,n = 0; n<4; i+=75,n++){//make spell rectangle
-			spellrectarray[n] =(new Rectangle(i,430,50,50));
+			spellrectarray[n] =(new Rectangle(i,730,50,50));
 		}
-		
-		
-		//i will make character list 
-		// will make spell list
-		// so that i can use integer instead of string
 	}
 	
     public void addNotify() {
@@ -184,14 +191,15 @@ class GamePanel extends JPanel {
     		mousex = e.getX();
     		mousey = e.getY();
     		if(screen == MENU){
+    			if(gamerect.contains(mouse)){//move to other screen
+					screen = SELECT;
+				}
 				if(instructionrect.contains(mouse)){
 					screen = SELECT;	
 				}
-				
-				if(gamerect.contains(mouse)){
-					screen = SELECT;
+				if(creditrect.contains(mouse)){
+					screen = CREDIT;
 				}
-				
 			}
 			if (screen == SELECT){//set p1,p2 and map here
 				if (readyrect.contains(mouse)){
@@ -203,7 +211,7 @@ class GamePanel extends JPanel {
 				if (SwingUtilities.isLeftMouseButton(e)){
 					for (int i = 0; i<4; i++){
 						if (charectarray[i].contains(mouse)){//choose character(click the character rect)
-							p1cha = chaarray[i];
+							p1cha = i;
 						}
 						if (spellrectarray[i].contains(mouse)){//choose spell
 							p1spell = i+1;//spell integer is start with 1 not 0
@@ -215,7 +223,7 @@ class GamePanel extends JPanel {
 					System.out.println("right click");
 					for (int i = 0; i<4; i++){
 						if (charectarray[i].contains(mouse)){//choose character(click the character rect)
-							p2cha = chaarray[i];
+							p2cha = i;
 						}
 						if (spellrectarray[i].contains(mouse)){//choose spell
 							
@@ -268,6 +276,12 @@ class GamePanel extends JPanel {
 		else{
 			imageInRect(g, buttonDown, gamerect);
 		}
+		if (creditrect.contains(mouse)){
+			imageInRect(g, buttonUp,creditrect);
+		}
+		else{
+			imageInRect(g, buttonDown, creditrect);
+		}
     	/*
     	g.setColor(new Color(50,200,222));  
         g.fillRect(0,0,getWidth(),getHeight());*/
@@ -288,11 +302,23 @@ class GamePanel extends JPanel {
     	g.fillRect(0,0,1280,900);
     	g.setColor(new Color(200,200,255));
     	for (int i=0; i<4;i++){
+    		if (charectarray[i].contains(mouse)){
+    			g.setColor(new Color(200,100,255));
+    		}
     		g.fillRect(charectarray[i].x,charectarray[i].y,charectarray[i].width,charectarray[i].height);
+    		g.setColor(new Color(200,200,255));
+    		if (spellrectarray[i].contains(mouse)){
+    			g.setColor(new Color(200,100,255));
+    		}
     		g.fillRect(spellrectarray[i].x,spellrectarray[i].y,spellrectarray[i].width,spellrectarray[i].height);
+    		g.setColor(new Color(200,200,255));
     		//imageInRect(g,chaimage[i],charectarray[i]);
     		//imageInRect(g,spellimage[i],spellrectarray[i]);
     	}
+    	imageInRect(g,chaimage[p1cha],p1charect);
+    	imageInRect(g,chaimage[p2cha],p2charect);
+    	//imageInRect(g,spellimage[p1spell-1],p1spellrect);
+    	//imageInRect(g,spellimage[p2spell-1],p2spellrect);
     	g.fillRect(readyrect.x,readyrect.y,readyrect.width,readyrect.height);
     	
     	//need code for map(arrow keys)
@@ -350,7 +376,7 @@ class Player{
 	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, SHOOTL = 4, SHOOTR = 5,SHOOTU = 6,SHOOTD = 7, SKILLL = 8,SKILLR = 9,SKILLU = 10,SKILLD = 11, WAIT = 5;
 		
-	public Player(int x, int y, String n, int num, int s, int p){
+	public Player(int x, int y, int n, int num, int s, int p){
 		this.x=x;
 		this.y=y;
 		player = p;
@@ -359,10 +385,11 @@ class Player{
 		newmove = 0;
 		frame = 1;
 		delay = 0;
-		name = n;
+		String [] chaarray = new String [] {"scorpion","B","C","D"};
+		name = chaarray[n];
 		spell = s;
 		stunned = false;
-		if (n == "scorpion"){
+		if (name == "scorpion"){
 			maxskillcool = 300;
 			skillcool = 300;
 			maxhealth = 100;
