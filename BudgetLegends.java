@@ -69,6 +69,7 @@ class GamePanel extends JPanel {
 	private int screen;//set screen that is on right now
 	private boolean []keys;//array of keys that user typed
 	private Point mouse;//mouse location
+	private int mx,my;
 	private Rectangle gamerect,readyrect,instructionrect,creditrect;//rects for menu screen and select screen
 	private Rectangle [] charectarray;//array that has rectangles to display characters in select page
 	private Rectangle [] spellrectarray;//array that has rectangles to display spells in select page
@@ -208,10 +209,10 @@ class GamePanel extends JPanel {
     			return;
     		}
     		if(screen == MENU){
-    			if(gamerect.contains(mouse)){//move to other screen
+    			if(gamerect.contains(mx,my)){//move to other screen
 					screen = SELECT;
 				}
-				if(instructionrect.contains(mouse)){
+				if(instructionrect.contains(mx,my)){
 					screen = SELECT;	
 				}
 				if(creditrect.contains(mouse)){
@@ -268,6 +269,14 @@ class GamePanel extends JPanel {
 		public void mouseExited(MouseEvent e){}
 		public void mouseReleased(MouseEvent e){}
 		public void mouseClicked(MouseEvent e){}
+		public void mouseMoved(MouseEvent evt){
+			mx = evt.getX()+20;
+			my = evt.getY();
+		}
+		public void mouseDragged(MouseEvent evt){
+			mx = evt.getX()+20;
+			my = evt.getY();		
+		}
     }
     class moveListener implements KeyListener{
 	    public void keyTyped(KeyEvent e) {}
@@ -324,10 +333,7 @@ class GamePanel extends JPanel {
     		}
     		g.fillRect(charectarray[i].x,charectarray[i].y,charectarray[i].width,charectarray[i].height);
     		g.setColor(new Color(200,200,255));
-    		if (spellrectarray[i].contains(mouse)){
-    			g.setColor(new Color(200,100,255));
-    		}
-    		g.fillRect(spellrectarray[i].x,spellrectarray[i].y,spellrectarray[i].width,spellrectarray[i].height);
+    		imageInRect(g,spellimage[i],spellrectarray[i]);//draw spell images
     		g.setColor(new Color(200,200,255));
     		//imageInRect(g,chaimage[i],charectarray[i]);
     		//imageInRect(g,spellimage[i],spellrectarray[i]);
