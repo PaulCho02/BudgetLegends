@@ -10,15 +10,9 @@
  menu 40%	(buttons, background image and font) 
  setting 80% (buttons,font,background image and specific details such as position of rects)
  credit screen 0%  (credit image)
- instruction screen 0%  (instruction image)
  music and sound 0%
  end screen 5%
  ---------------------------(in game)
- map
- characters sprites(Jay)
- collision in each maps
- skill for character 'c' rn it is just 
- damage boost -> damage boost and armor maybe
  
 */
 //do font today menu and select,work on instruction image
@@ -38,7 +32,7 @@ public class BudgetLegends extends JFrame{
     public BudgetLegends() {
 		super("Move the Box");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(1300,900);
+		setSize(1280,900);
 
 		myTimer = new javax.swing.Timer(10, new TickListener());	 // trigger every 100 ms
 		myTimer.start();
@@ -58,15 +52,8 @@ public class BudgetLegends extends JFrame{
 		}
 	}
 	
-    public static void main(String[] arguments) {    	
+    public static void main(String[] arguments) {
 		BudgetLegends frame = new BudgetLegends();		
-    }
-    class ClickStart implements ActionListener{
-    	@Override
-    	public void actionPerformed(ActionEvent evt){
-    		BudgetLegends game = new BudgetLegends();
-    		setVisible(false);
-    	}
     }
 }
 
@@ -80,6 +67,7 @@ class GamePanel extends JPanel {
 	private Rectangle gamerect,readyrect,instructionrect,creditrect;//rects for menu screen and select screen
 	private Rectangle [] charectarray;//array that has rectangles to display characters in select page
 	private Rectangle [] spellrectarray;//array that has rectangles to display spells in select page
+	private Rectangle undorect;//rectangle that user can go back to previous screen page
 	private Rectangle maprect,leftarrowrect,rightarrowrect;//rectangle that are using for select page
 	private Rectangle p1charect;//rectangle that display what character p1 choose
 	private Rectangle p2charect;//rectangle that display what character p2 choose
@@ -88,14 +76,15 @@ class GamePanel extends JPanel {
 	private int p1cha,p2cha;//character number that players choose
 	private int p1spell,p2spell;//spell number that players choose
 	private int mappos;//map number that players will play
+	private Image [] screenimage;//array that has menu,credit, and instruction page images
+	private Image [] undoimage;//array that has button images that leads to previous screen
 	private Image [] chaimage;//array that has all characters 
+	private Image [] chadieimage;//array that has all characters' die sprtes
 	private Image [] spellimage;//array taht has all spell images 
 	private Image [] mapimage;//array that has all 4 maps
-	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTIONS=4, CREDIT=5, WAIT=5, END=6;//defined screens as number
+	private Font font;//set the font that will use in menu and select page
+	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTION=4, CREDIT=5, WAIT=5, END=6;//defined screens as number
 	private Image buttonUp, buttonDown,leftarrow,leftarrow2,rightarrow,rightarrow2;//images that are using in menu and select page
-	private JLayeredPane layeredPane=new JLayeredPane();
-	private Font font;
-	
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
 		screen = WAIT;
@@ -110,8 +99,11 @@ class GamePanel extends JPanel {
 		p1spell = 1;
 		p2spell = 1;
 		mappos = 0;
-		chaimage = new Image[] {new ImageIcon("yellow/yellowwalkDown1.png").getImage(),new ImageIcon("yellow/yellowwalkL1.png").getImage(),
-					new ImageIcon("yellow/yellowwalkR1.png").getImage(),new ImageIcon("yellow/yellowwalkUp1.png").getImage()};//need to change to each character image
+		screenimage = new Image[] {new ImageIcon("screen/menu.png").getImage(),new ImageIcon("screen/credit.png").getImage(),new ImageIcon("screen/instruction.png").getImage()};
+		undoimage = new Image[] {new ImageIcon("undo/0.png").getImage(),new ImageIcon("undo/1.png").getImage()};
+		chaimage = new Image[] {new ImageIcon("charimage/0.png").getImage(),new ImageIcon("charimage/1.png").getImage(),
+					new ImageIcon("charimage/2.png").getImage(),new ImageIcon("charimage/3.png").getImage()};//characters' images
+		//chadieimage = new Image[] {new ImageIcon("chadie/0.png").getImage(),new ImageIcon("chadie/1.png").getImage(),new ImageIcon("chadie/2.png").getImage(),new ImageIcon("chadie/3.png").getImage()}
 		spellimage = new Image[]{new ImageIcon("spell/0.png").getImage(),new ImageIcon("spell/1.png").getImage(),
 					new ImageIcon("spell/2.png").getImage(),new ImageIcon("spell/3.png").getImage()};//load spell images
 		mapimage = new Image[] {new ImageIcon("maps/map1.png").getImage(),new ImageIcon("maps/map2.jpg").getImage(),
@@ -121,6 +113,7 @@ class GamePanel extends JPanel {
 		creditrect = new Rectangle (600,550,150,50);
 		gamerect = new Rectangle(600,350,150,50);
 		readyrect = new Rectangle(470,30,350,90);
+		undorect = new Rectangle(80,780,60,60);
 		maprect = new Rectangle(400,240,500,250);
 		leftarrowrect = new Rectangle(300,300,50,120);
 		rightarrowrect = new Rectangle(1000,300,50,120);
@@ -133,14 +126,12 @@ class GamePanel extends JPanel {
 		setPreferredSize( new Dimension(1280, 768));//defined size of the panel
 		charectarray = new Rectangle [4];//make array
 		spellrectarray = new Rectangle [4];
-		
 		for (int i=380,n = 0; n<4; i+=140,n++){//make character rectangles in array
 			charectarray[n] = new Rectangle(i,550,120,120);
 		}
 		for (int i=500,n = 0; n<4; i+=75,n++){//make spell rectangles in array
 			spellrectarray[n] =(new Rectangle(i,730,50,50));
 		}
-		
 		font = new Font("Comic Sans MS",Font.PLAIN,96);
 	}
 	
@@ -213,19 +204,20 @@ class GamePanel extends JPanel {
 		else if (p2.getHealth()<=0){
 			screen = END;
 		}
+		
+
     }
-    
     class clickListener implements MouseListener{
     	public void mousePressed(MouseEvent e){//mouse clicked
     		if (gamerect==null){
     			return;
     		}
     		if(screen == MENU){
-    			if(gamerect.contains(mx,my)){//move to other screen
+    			if(gamerect.contains(mouse)){//move to other screen
 					screen = SELECT;
 				}
-				if(instructionrect.contains(mx,my)){
-					screen = SELECT;	
+				if(instructionrect.contains(mouse)){
+					screen = INSTRUCTION;	
 				}
 				if(creditrect.contains(mouse)){
 					screen = CREDIT;
@@ -233,8 +225,8 @@ class GamePanel extends JPanel {
 			}
 			if (screen == SELECT){//set p1,p2 and map here
 				if (readyrect.contains(mouse)){//game start button
-					p1 = new Player(380,400,p1cha,9,p1spell,1);//using player class to make p1 and p2
-					p2 = new Player(700,400,p2cha,9,p2spell,2);
+					p1 = new Player(320,400,p1cha,9,p1spell,1);//using player class to make p1 and p2
+					p2 = new Player(950,400,p2cha,9,p2spell,2);
 					screen = GAME;//game start
 				}
 				//using if statement to define user did right click or left click(left click = p1,right click = p2)
@@ -270,8 +262,10 @@ class GamePanel extends JPanel {
 					}
 				}
 			}
-			if (screen == INSTRUCTIONS){//blitz screen(image)
-				//go back to menu
+			if (screen == INSTRUCTION){
+				if (undorect.contains(mouse)){
+					screen = MENU;
+				}
 			}
 			if (screen == CREDIT){//blitz screen(image)
 				//go back to menu
@@ -283,11 +277,11 @@ class GamePanel extends JPanel {
 		public void mouseClicked(MouseEvent e){}
 		public void mouseMoved(MouseEvent evt){
 			mx = evt.getX();
-			my = evt.getY();
+			my = evt.getY()+20;
 		}
 		public void mouseDragged(MouseEvent evt){
 			mx = evt.getX();
-			my = evt.getY();		
+			my = evt.getY()+20;		
 		}
     }
     class moveListener implements KeyListener{
@@ -306,46 +300,7 @@ class GamePanel extends JPanel {
 		g.drawImage(img, area.x, area.y, area.width, area.height, null);
     }
     public void drawMenu(Graphics g){//method to draw menu screen
-		/*
-		 public MainMenu {
-			//setSize(1300,900);
-			
-			ImageIcon background = new ImageIcon("menu.png");
-			JLabel back = new JLabel(background);		
-			back.setBounds(0, 0,background.getIconWidth(),background.getIconHeight());
-			layeredPane.add(back,1);
-			
-			ImageIcon title = new ImageIcon("title.png");
-			JButton tButton = new JButton(title);	
-			tButton.addActionListener(new ClickStart());
-			tButton.setBounds(300,600,title.getIconWidth(),title.getIconHeight());
-			layeredPane.add(tButton,2);
-			
-			ImageIcon start = new ImageIcon("start.png");
-			JButton sButton = new JButton(start);	
-			sButton.addActionListener(new ClickStart());
-			sButton.setBounds(300,400,start.getIconWidth(),start.getIconHeight());
-			layeredPane.add(sButton,2);
-			
-			ImageIcon credits = new ImageIcon("credit.png");
-			JButton cButton = new JButton(credits);	
-			cButton.addActionListener(new ClickStart());
-			cButton.setBounds(300,600,credits.getIconWidth(),credits.getIconHeight());
-			layeredPane.add(cButton,2);
-			
-			ImageIcon instructions = new ImageIcon("instruction.png");
-			JButton iButton = new JButton(instructions);	
-			iButton.addActionListener(new ClickStart());
-			iButton.setBounds(300,600,instructions.getIconWidth(),instructions.getIconHeight());
-			layeredPane.add(iButton,2);
-				
-			setContentPane(layeredPane);        
-			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			setVisible(true);
-		}
-		*/
-    	
-    	g.setColor(new Color(0xB1C4DF));  
+    	g.setColor(new Color(0xB1C4DF)); //set colour 
 		g.fillRect(0,0,1300,900);//background
 		g.setColor(new Color(0x66586F));//complementary colour for buttons
 		g.fillRect(600,350,150,50);//start
@@ -373,11 +328,10 @@ class GamePanel extends JPanel {
 		g.drawString("Credits",611,588);
 		g.setFont(new Font("Comic Sans MS",Font.PLAIN,24));
 		g.drawString("Instructions",608,483);
-		
     }
     
     public void drawGame(Graphics g){//method to draw game screen
-        g.drawImage(mapimage[mappos],0,0,1300,950,null);
+        g.drawImage(mapimage[mappos],0,0,1280,900,null);
 		p1.draw(g);//draw p1
 		p2.draw(g);//draw p2
     }
@@ -391,6 +345,7 @@ class GamePanel extends JPanel {
     			g.setColor(new Color(200,100,255));
     		}
     		g.fillRect(charectarray[i].x,charectarray[i].y,charectarray[i].width,charectarray[i].height);
+    		imageInRect(g,chaimage[i],charectarray[i]);
     		g.setColor(new Color(200,200,255));
     		imageInRect(g,spellimage[i],spellrectarray[i]);//draw spell images
     		g.setColor(new Color(200,200,255));
@@ -418,18 +373,39 @@ class GamePanel extends JPanel {
     	imageInRect(g,spellimage[p2spell],p2spellrect);//draw spell that p2 choose
     	g.fillRect(readyrect.x,readyrect.y,readyrect.width,readyrect.height);//draw game start button
     }
-
+    
     public void drawInstructions(Graphics g){//method to draw instruction screen
-		g.setColor(new Color(200,200,200));
-		g.fillRect(0,0,800,600);
+   		g.drawImage(screenimage[2], 0,0,1280,870,null);
+   		if (undorect.contains(mouse)){
+   			imageInRect(g,undoimage[1],undorect);
+   		}
+   		else{
+   			imageInRect(g,undoimage[0],undorect);
+   		}
 	}
 	
 	public void drawCredit(Graphics g){//method to draw credit screen
+	
 	}
 	
 	public void drawEnd(Graphics g){//method to draw end screen
-		g.setColor(new Color(150,150,15));
-		g.fillRect(0,0,1280,800);
+		g.setColor(new Color(0,100,50)); 
+		g.fillRect(0,0,1280,900);
+		Rectangle p1r = new Rectangle(200,250,300,450);
+		Rectangle p2r = new Rectangle(900,250,300,450);
+		/*
+		if (p1.gethealth()<0){//p2 win
+			imageInRect(g,chadieimage[p1cha],p1r);
+			imageInRect(g,chaimage[p2cha],p2r);
+			//print p2 win
+		}
+		else{//p1 win
+			imageInRect(g,chadieimage[p2cha],p2r);
+			imageInRect(g,chaimage[p1cha],p1r);
+			//print p1 win
+		}*/
+		g.fillRect(550,350,200,100);
+		
 		//g.fillRect(playagainrect);
 	}
 	
@@ -440,7 +416,7 @@ class GamePanel extends JPanel {
     	else if(screen == SELECT){
     		drawSelect(g);
     	}
-    	else if(screen == INSTRUCTIONS){
+    	else if(screen == INSTRUCTION){
     		drawInstructions(g);
     	}
     	else if(screen == CREDIT){
@@ -463,6 +439,8 @@ class Player{//class to make player
 	private int player;//player number (p1 or p2)
 	private int extraspeed;//speedup if player use spell
 	private Image [][] pics;//double array that has character's sprites
+	private Image [] bullimage;//array that has bullet images
+	private Image [] bullimage2;//character C has two types of bullet
 	private int dir, delay, move, newmove;//set player direction and action(move)
 	private double frame;//set frame
 	private int maxrapid,rapid;//rapid for basic attack
@@ -474,17 +452,22 @@ class Player{//class to make player
 	private int stuncool;//cooldown that determine how long the player stunned
 	private int spell;//spell that player choose
 	private int damageboost;//damage double or not(1 or 2)
-	private int healcool;//cooldown for heal spell cooldown
-	private int speedcool;//speed spell cooldown
-	private int damagedoublecool;//damage boost spell cooldown
-	private int flashcool;//flash spell cooldown
+	private int maxspellcool;//maximum cooldown for spell
+	private int spellcool;//cooldown for spell
 	private String name;//character name that player choose
+	private int nameint;//convert name(string) to integer
 	private int health,maxhealth;//set present health and maximum health
 	private Rectangle playerrect;//rectangle of the player 
-	private Rectangle bullrect;//rectangle for basic attack bullet
+	private Rectangle skillrect;//rectangle that will show skill available 
+	private Rectangle spellrect;//rectangle that will show spell available
 	private Energybolt energyb;//one of the characters skill
 	private Teleport tp;//one of the characters skill
 	private Stun stun;//one of the characters skill
+	private Image skillimage;
+	private Image [] spellimage;//array that has all spell images
+	private Image [] stunimage;//array that has stun images
+	private Image [] ebimage;//array that has energybolt images
+	private Image teleportimage;
 	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();//arraylist to add bullet that user shoot
 	public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, SHOOTL = 4, SHOOTR = 5,SHOOTU = 6,SHOOTD = 7, SKILLL = 8,SKILLR = 9,SKILLU = 10,SKILLD = 11, WAIT = 5;
 		
@@ -495,77 +478,183 @@ class Player{//class to make player
 		extraspeed = 0;//set extraspeed as 0 unless player use spell(ghost)
 		if (p == 1){//set the direction depends on the player's number
 			dir = RIGHT;
-			newmove = 1;
+			move = 1;
+			skillrect = new Rectangle(230,750,60,60);
+			spellrect = new Rectangle(310,750,60,60);
 		}
 		else{
 			dir = LEFT;
-			newmove = 0;
+			move = 0;
+			skillrect = new Rectangle(960,750,60,60);
+			spellrect = new Rectangle(1040,750,60,60);
 		}
 		frame = 1;//set frame
 		delay = 0;//set delay(time for each frame)
-		String [] chaarray = new String [] {"scorpion","B","C","D"};//array that has all characters' name
+		String [] chaarray = new String [] {"A","B","C","D"};//array that has all characters' name
 		name = chaarray[n];//set what character does user using
 		spell = s;//set what spell does user using 
 		damageboost = 1;//damageboost as 1 unless player use spell(damage x2)
 		stunned = false;//set stun status
-		if (name == "scorpion"){//set basic health, skill cooldown, attack rapid and damage based on their character(each character has different setting)
+		playerrect = new Rectangle(x,y,60,95);//set rectangle for player box
+		if (name == "A"){//set basic health, skill cooldown, attack rapid and damage based on their character(each character has different setting)
+			nameint = 0;
 			maxskillcool = 300;
 			skillcool = 300;
 			maxhealth = 100;
 			health = 100;//each character will have diff maxhealth
-			rapid = 24;//change to minimum rapid of all characters
-			maxrapid = 24;
-			basicdamage = 10;
-			damage = 10;
+			rapid = 20;//change to minimum rapid of all characters
+			maxrapid = 20;
+			basicdamage = 15;
+			damage = 15;
 		}
-		healcool = 1500;//spell cooldown
-		speedcool = 1200;
-		damagedoublecool = 1200;
-		flashcool = 2000;
-		
+		else if(name == "B"){
+			nameint = 1;
+			maxskillcool = 300;
+			skillcool = 300;
+			maxhealth = 300;
+			health = 300;
+			rapid = 37;
+			maxrapid = 37;
+			basicdamage = 8;
+			damage = 8; 
+		}
+		else if(name == "C"){
+			nameint = 2;
+			maxskillcool = 500;
+			skillcool = 500;
+			maxhealth = 220;
+			health = 220;
+			rapid = 10;
+			maxrapid = 10;
+			basicdamage = 3;
+			damage = 3;
+		}
+		else if(name == "D"){
+			nameint = 3;
+			maxskillcool = 250;
+			skillcool = 250;
+			maxhealth = 150;
+			health = 150;
+			rapid = 35;
+			maxrapid = 35;
+			basicdamage = 15;
+			damage = 15;
+		}
+		if (spell == 0){//heal
+			maxspellcool = 1500;
+			spellcool = 1500;
+		}
+		else if (spell == 1){//ghost(speed up)
+			maxspellcool = 1200;
+			spellcool = 1200;
+		}
+		else if (spell == 2){//damagedouble
+			maxspellcool = 1200;
+			spellcool = 1200;
+		}
+		else if (spell == 3){//flash
+			maxspellcool = 800;
+			spellcool = 800;
+		}
+		spellimage = new Image[]{new ImageIcon("spell/0.png").getImage(),new ImageIcon("spell/1.png").getImage(),
+					new ImageIcon("spell/2.png").getImage(),new ImageIcon("spell/3.png").getImage()};//load spell images
 		pics = new Image[12][10];//set doublearray for character sprites
-		if (name == "scorpion"){//load images based on character that player choose
+		bullimage = new Image[4];
+		if (name == "A"){//load images based on character that player choose
 			for (int i = 1; i<10;i++){ 
-				pics[0][i] = new ImageIcon("yellow"+"/"+"yellowwalkL"+i+".png").getImage();
-				pics[1][i] = new ImageIcon("yellow"+"/"+"yellowwalkR"+i+".png").getImage();
-				pics[2][i] = new ImageIcon("yellow"+"/"+"yellowwalkUp"+i+".png").getImage();
-				pics[3][i] = new ImageIcon("yellow"+"/"+"yellowwalkDown"+i+".png").getImage();
+				pics[0][i] = new ImageIcon("charA/walk/left"+"/"+"charAWalkLeft"+i+".png").getImage();
+				pics[1][i] = new ImageIcon("charA/walk/right"+"/"+"charAWalkRight"+i+".png").getImage();
+				pics[2][i] = new ImageIcon("charA/walk/up"+"/"+"charAWalkUp"+i+".png").getImage();
+				pics[3][i] = new ImageIcon("charA/walk/down"+"/"+"charAWalkDown"+i+".png").getImage();
 			}
-			/*
-			for (int i = 1; i<4;i++){
-				pics[4][i] = new ImageIcon("yellow"+"/"+"yellowshootL"+i+".png").getImage();
-				pics[5][i] = new ImageIcon("yellow"+"/"+"yellowshootR"+i+".png").getImage();
-				pics[6][i] = new ImageIcon("yellow"+"/"+"yellowshootUp"+i+".png").getImage();
-				pics[7][i] = new ImageIcon("yellow"+"/"+"yellowshootDown"+i+".png").getImage();
+			for (int i = 1; i<5;i++){//do it 5 times to prevent glitch
+				pics[4][i] = new ImageIcon("charA/shoot/left"+"/"+"charAShootLeft"+1+".png").getImage();
+				pics[5][i] = new ImageIcon("charA/shoot/right"+"/"+"charAShootRight"+1+".png").getImage();
+				pics[6][i] = new ImageIcon("charA/shoot/up"+"/"+"charAShootUp"+1+".png").getImage();
+				pics[7][i] = new ImageIcon("charA/shoot/down"+"/"+"charAShootDown"+1+".png").getImage();
 			}
-			for (int i = 1; i<4;i++){
-				pics[8][i] = new ImageIcon("yellow"+"/"+"yellowslashL"+i+".png").getImage();
-				pics[9][i] = new ImageIcon("yellow"+"/"+"yellowslashR"+i+".png").getImage();
-				pics[10][i] = new ImageIcon("yellow"+"/"+"yellowslashUp"+i+".png").getImage();
-				pics[11][i] = new ImageIcon("yellow"+"/"+"yellowslashDown"+i+".png").getImage();
-			*/
-				
-		}
-		
-		/*
-		ArrayList<String> movelist = new ArrayList<String>();
-		movelist.add("walk");
-		movelist.add("shoot");
-		movelist.add("skill");
-		ArrayList<String> dirlist = new ArrayList<String>();
-		movelist.add("R");
-		movelist.add("L");
-		movelist.add("Up");
-		movelist.add("Down");
-		for(int i = 0; i<num; i++){
-			for(String move:movelist){
-					for (int k = 0;k<num;k++){
-						pics[i][k] = new ImageIcon(name+"/"+name+move+direction+i+".png").getImage();
-					}
-				}
+			for (int i = 1; i<5;i++){ 
+				pics[8][i] = new ImageIcon("charA/spellcast/left"+"/"+"charASpellcastLeft"+1+".png").getImage();
+				pics[9][i] = new ImageIcon("charA/spellcast/right"+"/"+"charASpellcastRight"+1+".png").getImage();
+				pics[10][i] = new ImageIcon("charA/spellcast/up"+"/"+"charASpellcastUp"+1+".png").getImage();
+				pics[11][i] = new ImageIcon("charA/spellcast/down"+"/"+"charASpellcastDown"+1+".png").getImage();
+			}
+			for (int i = 0;i<4;i++){
+				bullimage[i] = new ImageIcon("charA/bullet/"+i+".png").getImage();
+			}	
+			skillimage = new ImageIcon("skill/0.png").getImage();//load skill image
+			stunimage = new Image[4];
+			for (int i = 0; i<4;i++){//load stun images
+				stunimage[i] = new ImageIcon("stun/"+i+".png").getImage();
 			}
 		}
-		*/
+		else if(name == "B"){
+			for (int i = 1; i<10; i++){
+				pics[0][i] = new ImageIcon("charB/walk/left/charBWalkLeft"+i+".png").getImage();
+				pics[1][i] = new ImageIcon("charB/walk/right/charBWalkRight"+i+".png").getImage();
+				pics[2][i] = new ImageIcon("charB/walk/up/charBWalkUp"+i+".png").getImage();
+				pics[3][i] = new ImageIcon("charB/walk/down/charBWalkDown"+i+".png").getImage();
+			}
+			for (int i = 1; i<5; i++){
+				pics[4][i] = new ImageIcon("charB/shoot/left/charB"+1+".png").getImage();
+				pics[5][i] = new ImageIcon("charB/shoot/right/charB"+1+".png").getImage();
+				pics[6][i] = new ImageIcon("charB/shoot/up/charB"+1+".png").getImage();
+				pics[7][i] = new ImageIcon("charB/shoot/down/charB"+1+".png").getImage();
+			}
+			for (int i = 0; i<4; i++){
+				bullimage[i] = new ImageIcon("charB/bullet/"+i+".png").getImage();
+			}
+			skillimage = new ImageIcon("skill/1.png").getImage();//load skill image
+			teleportimage = new ImageIcon("teleport/teleportimage.png").getImage();//load image that shows save point
+		}
+		else if(name == "C"){
+			for (int i = 0; i<9; i++){
+				pics[0][i+1] = new ImageIcon("charC/walk/left/charC07"+i+".png").getImage();
+				pics[1][i+1] = new ImageIcon("charC/walk/right/charC0"+(88+i)+".png").getImage();
+				pics[2][i+1] = new ImageIcon("charC/walk/up/charC06"+(i+1)+".png").getImage();
+				pics[3][i+1] = new ImageIcon("charC/walk/down/charC0"+(79+i)+".png").getImage();
+			}
+			for (int i = 1; i<5; i++){
+				pics[4][i] = new ImageIcon("charC/slash/charC1.png").getImage();
+				pics[5][i] = new ImageIcon("charC/slash/charC2.png").getImage();
+				pics[6][i] = new ImageIcon("charC/slash/charC3.png").getImage();
+				pics[7][i] = new ImageIcon("charC/slash/charC4.png").getImage();
+			}
+			bullimage2 = new Image[4];
+			for (int i = 0; i<4; i++){
+				bullimage[i] = new ImageIcon("charC/bullet/"+i+".png").getImage();
+				bullimage2[i] = new ImageIcon("charC/bullet2/"+i+".png").getImage();
+			}
+			skillimage = new ImageIcon("skill/2.png").getImage();//load skill image
+		}
+		else if(name == "D"){
+			for (int i = 0; i<9; i++){
+				pics[0][i+1] = new ImageIcon("charD/walk/left/charD07"+i+".png").getImage();
+				pics[1][i+1] = new ImageIcon("charD/walk/right/charD0"+(88+i)+".png").getImage();
+				pics[2][i+1] = new ImageIcon("charD/walk/up/charD06"+(i+1)+".png").getImage();
+				pics[3][i+1] = new ImageIcon("charD/walk/down/charD0"+(79+i)+".png").getImage();
+			}
+			for (int i = 1; i<5; i++){
+				pics[4][i] = new ImageIcon("charD/spellcast/left/charD1.png").getImage();
+				pics[5][i] = new ImageIcon("charD/spellcast/right/charD1.png").getImage();
+				pics[6][i] = new ImageIcon("charD/spellcast/up/charD1.png").getImage();
+				pics[7][i] = new ImageIcon("charD/spellcast/down/charD1.png").getImage();
+			}
+			for (int i = 1; i<5; i++){
+				pics[8][i] = new ImageIcon("charD/slash/left/charD1.png").getImage();
+				pics[9][i] = new ImageIcon("charD/slash/right/charD1.png").getImage();
+				pics[10][i] = new ImageIcon("charD/slash/up/charD1.png").getImage();
+				pics[11][i] = new ImageIcon("charD/slash/down/charD1.png").getImage();
+			}
+			for (int i = 0; i<4; i++){
+				bullimage[i] = new ImageIcon("charD/bullet/"+i+".png").getImage();
+			}
+			skillimage = new ImageIcon("skill/3.png").getImage();//load skill image
+			ebimage = new Image[4];
+			for (int i = 0;i<4;i++){
+				ebimage[i] = new ImageIcon("energybolt/"+i+".png").getImage();//load energy bolt images
+			}
+		}
 	}
 	public void setHealth(int h){//method to set health
 		health = h;
@@ -641,6 +730,7 @@ class Player{//class to make player
 				frame = 1;
 			}
 		}
+		playerrect = new Rectangle(x,y,60,95);//everytime character move, player's hitbox also change together
 	}
 
 	public void cooldown(){//method to measure cooldown for basic attack, skill, and spell
@@ -650,23 +740,18 @@ class Player{//class to make player
 		if (skillcool<maxskillcool){//cooldown for skill
 			skillcool+=1;
 		}
-		if (healcool<1500){//cooldown for spells
-			healcool+=1;
-		}
-		if (speedcool<1200){
-			if (speedcool>300){//speed up for up to 300 counts
-				extraspeed = 0;
+		if (spellcool<maxspellcool){
+			if (spell == 1){//ghost(speed up)
+				if(spellcool>300){//speed up for up to 300 counts
+					extraspeed = 0;
+				}
 			}
-			speedcool+=1;
-		}
-		if (damagedoublecool<1400){
-			if (damagedoublecool>300){//damage double for up to 300 counts
-				damageboost = 1;
+			else if (spell == 2){//damage double for up to 300 counts
+				if (spellcool>300){
+					damageboost = 1;
+				}
 			}
-			damagedoublecool+=1;
-		}
-		if (flashcool<2000){
-			flashcool+=1;
+			spellcool+=1;
 		}
 		if (stunned == true){//check the player is stunned and if they are, then count stuncool
 			stuncool +=1;
@@ -680,25 +765,70 @@ class Player{//class to make player
 	public void attack(){//basic attack
 		if (rapid == maxrapid){//can shoot
 			rapid = 0;//set rapid to 0
-			if (name == "scorpion"){//each character has different speed for bullet
-				bullets.add(new Bullet(x,y,10,dir));//add bullet object into bullets arraylist
+			if (name == "A"){//each character has different speed for bullet
+				if (dir == LEFT){
+					bullets.add(new Bullet(x-60,y+40,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == RIGHT){
+					bullets.add(new Bullet(x+70,y+40,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == UP){
+					bullets.add(new Bullet(x+20,y-60,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == DOWN){
+					bullets.add(new Bullet(x+20,y+60,10,dir));//add bullet object into bullets arraylist
+				}
+				
 			}
 			else if (name == "B"){
-				bullets.add(new Bullet(x,y,10,dir));//add bullet object into bullets arraylist
+				if (dir == LEFT){
+					bullets.add(new Bullet(x-60,y+40,25,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == RIGHT){
+					bullets.add(new Bullet(x+70,y+40,25,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == UP){
+					bullets.add(new Bullet(x+20,y-60,25,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == DOWN){
+					bullets.add(new Bullet(x+20,y+60,25,dir));//add bullet object into bullets arraylist
+				}
 			}
 			else if (name == "C"){
-				if (skillcool>200){//skill is 15 damage and armor increase so after 200 counts damage go back to normal
+				if (skillcool>150){//skill is 15 damage and armor increase so after 200 counts damage go back to normal
 					damage = basicdamage;
 				}
-				bullets.add(new Bullet(x,y,10,dir));//add bullet object into bullets arraylist
+				if (dir == LEFT){
+					bullets.add(new Bullet(x-150,y+45,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == RIGHT){
+					bullets.add(new Bullet(x+145,y+45,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == UP){
+					bullets.add(new Bullet(x+22,y-130,10,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == DOWN){
+					bullets.add(new Bullet(x+12,y+130,10,dir));//add bullet object into bullets arraylist
+				}
 			}
 			else if (name == "D"){
-				bullets.add(new Bullet(x,y,10,dir));//add bullet object into bullets arraylist
+				if (dir == LEFT){
+					bullets.add(new Bullet(x-30,y+40,14,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == RIGHT){
+					bullets.add(new Bullet(x+70,y+40,14,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == UP){
+					bullets.add(new Bullet(x+30,y-20,14,dir));//add bullet object into bullets arraylist
+				}
+				else if (dir == DOWN){
+					bullets.add(new Bullet(x+30,y+60,14,dir));//add bullet object into bullets arraylist
+				}
 			}
 		}
 		if (dir == LEFT){//player action type is determined based on their direction
 			newmove = SHOOTL;//set action
-			}
+		}
 		else if (dir == RIGHT){
 			newmove = SHOOTR;
 		}
@@ -708,86 +838,104 @@ class Player{//class to make player
 		else if (dir == DOWN){
 			newmove = SHOOTD;
 		}
+		if(delay % WAIT == 0){//go to next frame based on delay
+			if (frame>3){
+				frame = 0;
+			}
+			frame = (frame + 1) % pics[move].length;
+			if (frame == 0){//frame is start with 1
+				frame = 1;
+			}
+		}
+		if (newmove != move){//player did new action
+			move = newmove;
+			frame = 1;
+		}
 	}
 	
 	public void skill(){//method to perform skill
 		if (stunned == false){//player can use skill only if they are not stunned
 			if (skillcool == maxskillcool){//can use skill
-				if (name == "scorpion"){//energy bolt
-				/*
-					if (skillcool == maxskillcool){
-						if (dir == LEFT){
-							newmove = SKILLL;
-							stun = new Stun(x-5,y+5,dir);
-						}
-						else if (dir == RIGHT){
-							newmove = SKILLR;
-							stun = new Stun(x+15,y+5,dir);
-						}
-						else if (dir == UP){
-							newmove = SKILLU;
-							stun = new Stun(x+5,y-5,dir);
-						}
-						else if (dir == DOWN){
-							newmove = SKILLD;
-							stun = new Stun(x+5,y+20,dir);
-						}
-						skillcool = 0;
-					}*/
-				
-					if (dir == LEFT){//check direction and set energybolt object
-						newmove = SKILLL;//set new newmove(action)
-						energyb = new Energybolt(x-5,y+5,dir);//start point might be different based on where player heading
+				if (name == "A"){//stun skill
+					if (dir == LEFT){//based on the direction the start point of the stun object is different
+						newmove = SKILLL;
+						stun = new Stun(x-65,y+15,dir);
 					}
 					else if (dir == RIGHT){
 						newmove = SKILLR;
-						energyb = new Energybolt(x+15,y+5,dir);
+						stun = new Stun(x+45,y+15,dir);
 					}
 					else if (dir == UP){
 						newmove = SKILLU;
-						energyb = new Energybolt(x+5,y-5,dir);
+						stun = new Stun(x+20,y-60,dir);
 					}
 					else if (dir == DOWN){
 						newmove = SKILLD;
-						energyb = new Energybolt(x+5,y+20,dir);
+						stun = new Stun(x+20,y+80,dir);
+					}
+					skillcool = 0;
+					if(delay % WAIT == 0){//go to next frame based on delay
+						if (frame>3){
+							frame = 0;
+						}
+						frame = (frame + 1) % pics[move].length;
+						if (frame == 0){//frame is start with 1
+							frame = 1;
+						}
+					}
+					if (newmove != move){//player did new action
+						move = newmove;
+						frame = 1;
+					}
+				}
+				else if (name == "B"){//teleport
+					if (tp == null){//set position
+						tp = new Teleport(x,y);//set teleport object
+						skillcool = maxskillcool-40;//after 40 counts,player can use teleport again
+					}
+					else{//use teleport skill
+						x = tp.getx();//set player location to previous
+						y = tp.gety();
+						tp = null;//set teleport object to null
+						skillcool = 0;//reset the cooldown
+					}
+				}
+				else if (name == "C"){//10 more damage
+					damage = basicdamage+10;//add 15 damage
+					skillcool = 0;
+				}
+				else if (name == "D"){//energy bolt skill
+					if (dir == LEFT){//check direction and set energybolt object
+						newmove = SKILLL;//set new newmove(action)
+						energyb = new Energybolt(x-100,y+30,dir);//start point might be different based on where player heading
+					}
+					else if (dir == RIGHT){
+						newmove = SKILLR;
+						energyb = new Energybolt(x+50,y+30,dir);
+					}
+					else if (dir == UP){
+						newmove = SKILLU;
+						energyb = new Energybolt(x+20,y-100,dir);
+					}
+					else if (dir == DOWN){
+						newmove = SKILLD;
+						energyb = new Energybolt(x+20,y+95,dir);
 					}
 					skillcool = 0;//reset the cooldown
+					if(delay % WAIT == 0){//go to next frame based on delay
+						if (frame>3){
+							frame = 0;
+						}
+						frame = (frame + 1) % pics[move].length;
+						if (frame == 0){//frame is start with 1
+							frame = 1;
+						}
+					}
+					if (newmove != move){//player did new action
+						move = newmove;
+						frame = 1;
+					}
 				}
-			}
-			else if (name == "B"){//teleport
-				if (tp == null){//set position
-					tp = new Teleport(x,y);//set teleport object
-					skillcool = maxskillcool-40;//after 40 counts,player can use teleport again
-				}
-				else{//use teleport skill
-					x = tp.getx();//set player location to previous
-					y = tp.gety();
-					tp = null;//set teleport object to null
-					skillcool = 0;//reset the cooldown
-				}
-			}
-			else if (name == "C"){//15 more damage
-				damage = basicdamage+15;//add 15 damage
-				skillcool = 0;
-			}
-			else if (name == "D"){//stun skill
-				if (dir == LEFT){//based on player direction, start point of stun is different
-					newmove = SKILLL;
-					stun = new Stun(x-5,y+5,dir);//set stun object
-				}
-				else if (dir == RIGHT){
-					newmove = SKILLR;
-					stun = new Stun(x+15,y+5,dir);
-				}
-				else if (dir == UP){
-					newmove = SKILLU;
-					stun = new Stun(x+5,y-5,dir);
-				}
-				else if (dir == DOWN){
-					newmove = SKILLD;
-					stun = new Stun(x+5,y+20,dir);
-				}
-				skillcool = 0;//reset the cooldown
 			}
 		}
 	}
@@ -795,31 +943,25 @@ class Player{//class to make player
 	public void spell(){//method to use spell
 		//player can use heal spell even if the player is stunned
 		if (spell == 0){//heal 30         
-			if (healcool == 1500){//can use spell
+			if (spellcool == maxspellcool){//can use spell
 				if (health+30<=maxhealth){
 					health+=30;
 				}
 				else if (health+30>maxhealth){
 					health = maxhealth;
 				}
-				healcool = 0;
+				spellcool = 0;
 			}
 		}
 		if (stunned == false){//can't use spell if player is stunned
-			if (spell == 1){//speed up
-				if (speedcool == 1200){//can use spell
-					extraspeed = 2;//move two more pixel
-					speedcool = 0;//reset spell cool
+			if (spellcool == maxspellcool){//can use spell
+				if (spell == 1){//ghost(speed up)
+					extraspeed = 2;
 				}
-			}
-			else if (spell == 2){//damage double
-				if (damagedoublecool == 1400){//can use spell
+				else if (spell == 2){//damage double
 					damageboost = 2;//damage double(ex. damage*damageboost)
-					damagedoublecool = 0;//reset spell cool
 				}
-			}
-			else if (spell == 3){//flash
-				if (flashcool == 2000){//can use spell
+				else if (spell == 3){
 					if (dir == LEFT){//change position based on player's direction
 						x -= 200;
 					}
@@ -832,8 +974,8 @@ class Player{//class to make player
 					else if(dir == DOWN){
 						y += 200;
 					}
-					flashcool = 0;//reset skill cooldown
 				}
+				spellcool = 0;//reset spell cool
 			}
 		}
 	}
@@ -841,38 +983,37 @@ class Player{//class to make player
 	public void checkhit(Player enemy){//method to check the player get hit
 		ArrayList<Bullet> blist = enemy.getBullets();//get enemy's bullets arraylist 
 		String enemycha = enemy.getName();//enemy character
+		Rectangle enemybullrect = new Rectangle(0,0,0,0);//Rectangle for enemy bullet
 		for (Bullet b: blist){//go through bullet list
 			if (b != null){//if bullet is not null
 				int p = blist.indexOf(b);//get position of the bullet in the arraylist
-				if (enemycha == "scorpion"){//each character has different bullet size
-					bullrect = new Rectangle(b.getbullx(),b.getbully(),5,5);//set rectangle for bullet
-				
-					if (name == "scorpion"){//each character has different hit box size
-						playerrect = new Rectangle(x,y,50,50);//set rectangle for player box
-						if (bullrect.intersects(playerrect)){//player get hit
-							blist.set(p,null);//set the bullet as null
-							enemy.setBullets(blist);//set the bullet arraylist to new version
-							health = health-enemy.getDamage()*enemy.getDamageboost();//reset the player's health
-						}
-					}
+				if (enemycha == "A"){//each character has different bullet size
+					enemybullrect = b.getbullrect("A");//get rectangle for bullet
+					
 				}
 				else if (enemycha == "B"){
-					//bullrect = Rectangle()
+					enemybullrect = b.getbullrect("B");
+					
 				}
 				else if (enemycha == "C"){
-					//bullrect = Rectangle()
+					enemybullrect = b.getbullrect("C");
 				}
 				else if (enemycha == "D"){
-					//bullrect = Rectangle()
+					enemybullrect = b.getbullrect("D");
+				}
+				
+				if (enemybullrect.intersects(playerrect)){//player get hit
+					blist.set(p,null);//set the bullet as null
+					enemy.setBullets(blist);//set the bullet arraylist to new version
+					health = health-enemy.getDamage()*enemy.getDamageboost();//reset the player's health
 				}
 			}				
 		}
-		if (enemycha == "scorpion"){//check player hit by energy bolt
-			/*
-			if (enemy.getStun() != null){
-				Rectangle stunrect = new Rectangle(enemy.getStun().getx(),enemy.getStun().gety(),15,15);
-				if (name == "scorpion"){
-					playerrect = new Rectangle(x,y,50,50);
+		if (enemycha == "A"){//check player hit by energy bolt
+			if (enemy.getStun() != null){//check the enemy use stun skill
+				Rectangle stunrect = enemy.getStun().getstunrect();//get rectangle of stunshot
+				if (name == "A"){//set player's hitbox
+					playerrect = new Rectangle(x,y,60,95);
 				}
 				else if(name == "B"){
 					playerrect = new Rectangle(x,y,50,50);
@@ -883,17 +1024,19 @@ class Player{//class to make player
 				else if(name == "D"){
 					playerrect = new Rectangle(x,y,50,50);
 				}
-				if (stunrect.intersects(playerrect)){
-						health = health-10*enemy.getDamageboost();
-						stunned = true;
-						enemy.setStun();
+				
+				if (stunrect.intersects(playerrect)){//player get hit
+					health = health-10*enemy.getDamageboost();//set player's health(get damage)
+					stunned = true;//set player's stun status as true(player stunned)
+					enemy.setStun();//set enemy's stun as null
 				}
-			}*/
-			
+			}
+		}
+		else if (enemycha == "D"){//check player hit by stun
 			if (enemy.getEb() != null){//if enemy use energybolt
-				Rectangle ebrect = new Rectangle(enemy.getEb().getebx(),enemy.getEb().geteby(),10,10);//make the rectangle of energybolt
-				if (name == "scorpion"){//set player hitbox
-					playerrect = new Rectangle(x,y,50,50);
+				Rectangle ebrect = enemy.getEb().getebrect();//make the rectangle of energybolt
+				if (name == "A"){//set player hitbox
+					playerrect = new Rectangle(x,y,60,95);
 				}
 				else if(name == "B"){
 					playerrect = new Rectangle(x,y,50,50);
@@ -907,28 +1050,6 @@ class Player{//class to make player
 				if (ebrect.intersects(playerrect)){//player hit by energybolt(get damage)
 					health = health-30*enemy.getDamageboost();//reset the player's health
 					enemy.setEb(null);//set enemy's energybolt to null
-				}
-			}
-		}
-		else if (enemycha == "D"){//check player hit by stun
-			if (enemy.getStun() != null){//check the enemy use stun skill
-				Rectangle stunrect = new Rectangle(enemy.getStun().getx(),enemy.getStun().gety(),15,15);//set rectangle of stunshot
-				if (name == "scorpion"){//set player's hitbox
-					playerrect = new Rectangle(x,y,50,50);
-				}
-				else if(name == "B"){
-					playerrect = new Rectangle(x,y,50,50);
-				}
-				else if(name == "C"){
-					playerrect = new Rectangle(x,y,50,50);
-				}
-				else if(name == "D"){
-					playerrect = new Rectangle(x,y,50,50);
-				}
-				if (stunrect.intersects(playerrect)){//player get hit
-					health = health-10*enemy.getDamageboost();//set player's health(get damage)
-					stunned = true;//set player's stun status as true(player stunned)
-					enemy.setStun();//set enemy's stun as null
 				}
 			}
 		}							
@@ -991,21 +1112,75 @@ class Player{//class to make player
 			}
 		}
 	}
-	
+	public void imageInRect(Graphics g, Image img, Rectangle area){//method to draw image in rectangle
+		g.drawImage(img, area.x, area.y, area.width, area.height, null);
+    }
 	public void draw(Graphics g){//method to draw character,bullets, and skills on the screen
-		g.drawImage(pics[newmove][(int)frame], x, y, null);//draw character
-
+		if (name == "B"){//if player use teleport skill it shows where the player will go back
+			if (tp != null){
+				imageInRect(g,teleportimage,new Rectangle(tp.getx()+10,tp.gety()+20,30,30));
+			}
+		}
+		if (name == "C"){//C has different motion for basic attack so need set the sprites' location again
+			if (move == SHOOTL){
+				g.drawImage(pics[move][(int)frame], x-140, y, null);//draw character
+			}
+			else if(move == SHOOTR){
+				g.drawImage(pics[move][(int)frame], x, y, null);//draw character
+			}
+			else if(move == SHOOTU){
+				g.drawImage(pics[move][(int)frame], x, y-130, null);//draw character
+			}
+			else if(move == SHOOTD){
+				g.drawImage(pics[move][(int)frame], x+10, y-20, null);//draw character
+			}
+			else{
+				g.drawImage(pics[move][(int)frame], x, y, null);//draw character
+			}
+		}
+		else if (name == "D"){//energy bolt sprite shows a little bit off from its location
+			if (move == SKILLL){
+				g.drawImage(pics[move][(int)frame], x-150, y, null);//draw character
+			}
+			else if(move == SKILLR){
+				g.drawImage(pics[move][(int)frame], x+20, y, null);//draw character
+			}
+			else if(move == SKILLU){
+				g.drawImage(pics[move][(int)frame], x-50, y-40, null);//draw character
+			}
+			else if(move == SKILLD){
+				g.drawImage(pics[move][(int)frame], x-50, y+20, null);//draw character
+			}
+			else{
+				g.drawImage(pics[move][(int)frame], x, y, null);//draw character
+			}
+		}
+		else{
+			g.drawImage(pics[move][(int)frame], x, y, null);//draw character
+		}
+		
 		g.setColor(new Color(0,0,0));//black
 		for (Bullet b:bullets){//draw bullets
 			if (b!=null){
-				g.fillRect(b.getbullx(),b.getbully(),5,5);//need to change to image
+				if (name == "C"){
+					if (damage != basicdamage){
+						imageInRect(g,bullimage2[b.getbulld()],b.getbullrect(name));//draw bullet image
+					}
+					else{
+						imageInRect(g,bullimage[b.getbulld()],b.getbullrect(name));//draw bullet image
+					}
+				}
+				else{
+					imageInRect(g,bullimage[b.getbulld()],b.getbullrect(name));//draw bullet image	
+				}
+				
 			}
 		}
 		if (energyb != null){//draw energy bolt
-			g.fillRect(energyb.getebx(),energyb.geteby(),10,10);//need to change to image
+			imageInRect(g,ebimage[energyb.getebd()],energyb.getebrect());
 		}
 		if (stun != null){//draw stunshot
-			g.fillRect(stun.getx(),stun.gety(),15,15);//need to change to image
+			imageInRect(g,stunimage[stun.getd()],stun.getstunrect());
 		}
 		g.setColor(new Color(255,0,0));//red
 		if (player == 1){//check player is p1 or p2
@@ -1020,7 +1195,17 @@ class Player{//class to make player
 		}
 		else if (player == 2){
 			g.fillRect(740,30,(int)((double)health/(double)maxhealth*500),50);
-		} 
+		
+		}
+		g.setColor(new Color(0,0,0,127)); 
+		imageInRect(g,spellimage[spell],spellrect);//draw spell image
+		if (spellcool < maxspellcool){//can't use spell and spell in cooldown
+			g.fillRect(spellrect.x,spellrect.y,60-(int)((double)spellcool/maxspellcool*60),60);//(hovering)draw translucent rectangle on the top to show the cooldown
+		}
+		imageInRect(g,skillimage,skillrect);//draw skill image
+		if (skillcool<maxskillcool){
+			g.fillRect(skillrect.x,skillrect.y,60-(int)((double)skillcool/maxskillcool*60),60);//(hovering)draw translucent rectangle to show the cooldown
+		}
 		movebullets();//call movebullets method when program draw player
 	}
 	
@@ -1028,6 +1213,7 @@ class Player{//class to make player
 	class Bullet{//class for bullet that user shoot(basic attack)
 		private int x,y,speed;//bullet's postion and speed
 		private int dir;//bullet's direction
+		private Rectangle bullrect;
 		public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3;
 		public Bullet(int X, int Y, int s,int d){//method to set basic information of bullet
 			x = X;//set location
@@ -1053,12 +1239,61 @@ class Player{//class to make player
 		public void setbully(int Y){
 			y = Y;
 		}
+		public Rectangle getbullrect(String cha){//method to return the rectangle of the bullet
+			if (cha == "A"){//each character has different bullet size
+				if (dir==LEFT){//based on the direction bullet's rectangle direction is also different
+					bullrect = new Rectangle(x,y,60,15);
+				}
+				else if (dir==RIGHT){
+					bullrect = new Rectangle(x,y,60,15);
+				}
+				else if (dir==UP){
+					bullrect = new Rectangle(x,y,15,60);
+				}
+				else if (dir==DOWN){
+					bullrect = new Rectangle(x,y,15,60);
+				}
+			}
+			else if (cha == "B"){
+				if (dir==LEFT){//based on the direction bullet's rectangle direction is also different
+					bullrect = new Rectangle(x,y,60,15);
+				}
+				else if (dir==RIGHT){
+					bullrect = new Rectangle(x,y,60,15);
+				}
+				else if (dir==UP){
+					bullrect = new Rectangle(x,y,15,60);
+				}
+				else if (dir==DOWN){
+					bullrect = new Rectangle(x,y,15,60);
+				}
+			}
+			else if (cha == "C"){
+				if (dir==LEFT){//based on the direction bullet's rectangle direction is also different
+					bullrect = new Rectangle(x,y,60,30);
+				}
+				else if (dir==RIGHT){
+					bullrect = new Rectangle(x,y,60,30);
+				}
+				else if (dir==UP){
+					bullrect = new Rectangle(x,y,30,60);
+				}
+				else if (dir==DOWN){
+					bullrect = new Rectangle(x,y,30,60);
+				}
+			}
+			else if (cha == "D"){
+				bullrect = new Rectangle(x,y,20,20);
+			}
+			return bullrect;
+		}
 		
 	}
 	class Energybolt{//class for energybolt skill
 		private int x,y;//energybolt location
 		private int dir;//direction
 		private int distance;//total distance that energybolt move
+		private Rectangle ebrect;
 		public static final int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3;
 		public Energybolt(int X, int Y, int d){//method to set basic information of energybolt
 			x = X;//set location
@@ -1087,6 +1322,21 @@ class Player{//class to make player
 		public void adddis(int i){//method to add distance that energybolt move
 			distance += i;
 		}
+		public Rectangle getebrect(){
+			if (dir == 0){
+				ebrect = new Rectangle(x,y,100,35);
+			}
+			else if (dir == 1){
+				ebrect = new Rectangle(x,y,100,35);
+			}
+			else if (dir == 2){
+				ebrect = new Rectangle(x,y,35,100);
+			}
+			else if (dir == 3){
+				ebrect = new Rectangle(x,y,35,100);
+			}
+			return ebrect;
+		}
 	}
 	class Teleport{//class for teleport skill
 		private int x,y;//location that player will teleport
@@ -1109,6 +1359,7 @@ class Player{//class to make player
 	}
 	class Stun{//class for stun skill
 		private int x,y,dir;//skill position and direction
+		private Rectangle stunrect;//rectangle for stun
 		public Stun(int X, int Y, int d){//method to set basic information of stun
 			x = X;//set location(start point)
 			y = Y;
@@ -1129,5 +1380,22 @@ class Player{//class to make player
 		public void sety(int Y){
 			y = Y;
 		}
+		public Rectangle getstunrect(){
+			if (dir == 0){
+				stunrect = new Rectangle(x,y,100,35);
+			}
+			else if (dir == 1){
+				stunrect = new Rectangle(x,y,100,35);
+			}
+			else if (dir == 2){
+				stunrect = new Rectangle(x,y,35,100);
+			}
+			else if (dir == 3){
+				stunrect = new Rectangle(x,y,35,100);
+			}
+			return stunrect;
+		}
 	}
 }
+
+
