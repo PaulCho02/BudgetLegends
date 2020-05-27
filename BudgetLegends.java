@@ -31,6 +31,47 @@ import javax.imageio.*;
 import java.util.*;
 import java.awt.MouseInfo;
 
+class MainMenu {
+	private JLayeredPane layeredPane=new JLayeredPane();
+	
+	public MainMenu {
+		//setSize(1300,900);
+		
+		ImageIcon background = new ImageIcon("menu.jpg");
+		JLabel back = new JLabel(background);		
+		back.setBounds(0, 0,background.getIconWidth(),background.getIconHeight());
+		layeredPane.add(back,1);
+		
+		ImageIcon title = new ImageIcon("title.png");
+		JButton tButton = new JButton(title);	
+		tButton.addActionListener(new ClickStart());
+		tButton.setBounds(300,600,title.getIconWidth(),title.getIconHeight());
+		layeredPane.add(tButton,2);
+		
+		ImageIcon start = new ImageIcon("start.png");
+		JButton sButton = new JButton(start);	
+		sButton.addActionListener(new ClickStart());
+		sButton.setBounds(300,400,start.getIconWidth(),start.getIconHeight());
+		layeredPane.add(sButton,2);
+		
+		ImageIcon credits = new ImageIcon("credit.png");
+		JButton cButton = new JButton(credits);	
+		cButton.addActionListener(new ClickStart());
+		cButton.setBounds(300,600,credits.getIconWidth(),credits.getIconHeight());
+		layeredPane.add(cButton,2);
+		
+		ImageIcon instructions = new ImageIcon("instruction.png");
+		JButton iButton = new JButton(instructions);	
+		iButton.addActionListener(new ClickStart());
+		iButton.setBounds(300,600,instructions.getIconWidth(),instructions.getIconHeight());
+		layeredPane.add(iButton,2);
+			
+		setContentPane(layeredPane);        
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setVisible(true);
+	}
+}
+
 public class BudgetLegends extends JFrame{
 	javax.swing.Timer myTimer; 
 	GamePanel game;
@@ -59,7 +100,16 @@ public class BudgetLegends extends JFrame{
 	}
 	
     public static void main(String[] arguments) {
+    	MainMenu frame = new MainMenu();
+    	
 		BudgetLegends frame = new BudgetLegends();		
+    }
+    class ClickStart implements ActionListener{
+    	@Override
+    	public void actionPerformed(ActionEvent evt){
+    		BudgetLegends game = new BudgetLegends();
+    		setVisible(false);
+    	}
     }
 }
 
@@ -86,6 +136,11 @@ class GamePanel extends JPanel {
 	private Image [] mapimage;//array that has all 4 maps
 	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTIONS=4, CREDIT=5, WAIT=5, END=6;//defined screens as number
 	private Image buttonUp, buttonDown,leftarrow,leftarrow2,rightarrow,rightarrow2;//images that are using in menu and select page
+	public boolean ready=false;//
+	int frameCnt = 0;//frame centre
+	Font fontLocal = null;//local font
+	Font fontSys = null;//system font
+	
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
 		screen = WAIT;
@@ -129,12 +184,27 @@ class GamePanel extends JPanel {
 		for (int i=500,n = 0; n<4; i+=75,n++){//make spell rectangles in array
 			spellrectarray[n] =(new Rectangle(i,730,50,50));
 		}
+		
+		//String fName = "Rushing Nightshade DEMO.ttf";//dunno what this part means 
+    	InputStream is = GamePanel.class.getResourceAsStream(fName);
+    	try{
+    		fontLocal = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(32f);
+    	}
+    	catch(IOException ex){
+    		System.out.println(ex);	
+    	}
+    	catch(FontFormatException ex){
+    		System.out.println(ex);	
+    	}
+	
+    	fontSys = new Font("Comic Sans MS",Font.PLAIN,32);
 	}
 	
     public void addNotify() {
         super.addNotify();
         requestFocus();
         screen = MENU;
+        ready = true;//font
     }
 	public void update(){
 		if (screen == GAME){//play game
@@ -201,7 +271,7 @@ class GamePanel extends JPanel {
 			screen = END;
 		}
 		
-
+		frameCnt++;//font stuff
     }
     class clickListener implements MouseListener{
     	public void mousePressed(MouseEvent e){//mouse clicked
@@ -358,6 +428,17 @@ class GamePanel extends JPanel {
     	imageInRect(g,spellimage[p1spell],p1spellrect);//draw spell that p1 choose
     	imageInRect(g,spellimage[p2spell],p2spellrect);//draw spell that p2 choose
     	g.fillRect(readyrect.x,readyrect.y,readyrect.width,readyrect.height);//draw game start button
+    }
+    
+    public void drawFont (Graphics g) {
+    	g.setColor(new Color(222,255,222));  
+        g.fillRect(0,0,getWidth(),getHeight());  
+
+		g.setColor(Color.BLACK);  
+		g.setFont(fontSys);
+    	g.drawString("Font From System: "+frameCnt,100,100);
+		g.setFont(fontLocal);
+    	g.drawString("Font From File: "+frameCnt,100,300);
     }
     
     public void drawInstructions(Graphics g){//method to draw instruction screen
@@ -1072,5 +1153,3 @@ class Player{//class to make player
 		}
 	}
 }
-
-
