@@ -24,6 +24,7 @@ import java.io.*;
 import javax.imageio.*; 
 import java.util.*;
 import java.awt.MouseInfo;
+import sun.audio.*;
 
 public class BudgetLegends extends JFrame{
 	javax.swing.Timer myTimer; 
@@ -50,6 +51,18 @@ public class BudgetLegends extends JFrame{
 				game.repaint();
 			}			
 		}
+	}
+	
+	public static void music () {
+		AudioPlayer ap = AudioPlayer.player;
+		AudioStream as;
+		AudioData ad;
+		ContinuousAudioDataStream loop = null;
+		
+		as = new AudioStream(new FileInputStream(""));//insert background music file
+		ad = as.getData();
+		loop = new ContinuousAudioDataStream(ad);
+		ap.start(loop);
 	}
 	
     public static void main(String[] arguments) {
@@ -85,6 +98,10 @@ class GamePanel extends JPanel {
 	private Font font;//set the font that will use in menu and select page
 	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTION=4, CREDIT=5, WAIT=5, END=6;//defined screens as number
 	private Image buttonUp, buttonDown,leftarrow,leftarrow2,rightarrow,rightarrow2;//images that are using in menu and select page
+	private AudioPlayer ap = AudioPlayer.player;
+	private AudioStream as;
+	private AudioData ad;
+	private ContinuousAudioDataStream loop = null;
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
 		screen = WAIT;
@@ -151,6 +168,65 @@ class GamePanel extends JPanel {
 		}
 		
 	}
+	
+	public static void music () {
+		if (screen == MENU) { //differing music for some screens
+			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));//insert background music file
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		if (screen == SELECT) {
+			as = new AudioStream(new FileInputStream("AdHeroes/select.mp3"));
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		if (screen == GAME) {
+			if (mappos == 0) { //different audio for each map
+				as = new AudioStream(new FileInputStream("AdHeroes/firstmap.mp3"));
+			}
+			if (mappos == 1) {
+				as = new AudioStream(new FileInputStream("AdHeroes/secondmap.mp3"));
+			}
+			if (mappos == 2) {
+				as = new AudioStream(new FileInputStream("AdHeroes/thirdmap.mp3"));
+			}
+			if (mappos == 3) {
+				as = new AdioStream(new FileInputStream(""));
+			}
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}	
+		if (screen == INSTRUCTION) {
+			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		if (screen == CREDIT) {
+			as = new AudioStream(new FileInputStream("AdHeroes/creditsong.mp3"));
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		if (screen == WAIT) {
+			as = new AudioStream(new FileInputStream(""));
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		if (screen == END) {
+			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));
+			ad = as.getData();
+			loop = new ContinuousAudioDataStream(ad);
+			ap.start(loop);
+		}
+		
+		
+	}
+	
     public void move() {//method that player can move and use skills
 		if(keys[KeyEvent.VK_RIGHT] ){//p1 movement
 			p2.move(5,0);
@@ -1397,5 +1473,3 @@ class Player{//class to make player
 		}
 	}
 }
-
-
