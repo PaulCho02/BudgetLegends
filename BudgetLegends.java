@@ -98,10 +98,6 @@ class GamePanel extends JPanel {
 	private Font font;//set the font that will use in menu and select page
 	public static final int MENU=1, SELECT=2, GAME=3, INSTRUCTION=4, CREDIT=5, WAIT=5, END=6;//defined screens as number
 	private Image buttonUp, buttonDown,leftarrow,leftarrow2,rightarrow,rightarrow2;//images that are using in menu and select page
-	private AudioPlayer ap = AudioPlayer.player;
-	private AudioStream as;
-	private AudioData ad;
-	private ContinuousAudioDataStream loop = null;
 	public GamePanel(){
 		keys = new boolean[KeyEvent.KEY_LAST+1];
 		screen = WAIT;
@@ -116,8 +112,8 @@ class GamePanel extends JPanel {
 		p1spell = 1;
 		p2spell = 1;
 		mappos = 0;
-		screenimage = new Image[] {new ImageIcon("screen/menu.png").getImage(),new ImageIcon("screen/credit.png").getImage(),new ImageIcon("screen/instruction.png").getImage()};
-		undoimage = new Image[] {new ImageIcon("undo/0.png").getImage(),new ImageIcon("undo/1.png").getImage()};
+		screenimage = new Image[] {new ImageIcon("screen/menu.png").getImage(),new ImageIcon("screen/credit.png").getImage(),new ImageIcon("screen/instruction.png").getImage(),new ImageIcon("screen/credit.png").getImage()};
+		undoimage = new Image[] {new ImageIcon("undo/0.png").getImage(),new ImageIcon("undo/1.png").getImage(),new ImageIcon("undo/2.png").getImage(),new ImageIcon("undo/3.png").getImage()};
 		chaimage = new Image[] {new ImageIcon("charimage/0.png").getImage(),new ImageIcon("charimage/1.png").getImage(),
 					new ImageIcon("charimage/2.png").getImage(),new ImageIcon("charimage/3.png").getImage()};//characters' images
 		//chadieimage = new Image[] {new ImageIcon("chadie/0.png").getImage(),new ImageIcon("chadie/1.png").getImage(),new ImageIcon("chadie/2.png").getImage(),new ImageIcon("chadie/3.png").getImage()}
@@ -170,17 +166,15 @@ class GamePanel extends JPanel {
 	}
 	
 	public static void music () {
+		AudioPlayer ap = AudioPlayer.player;
+		AudioStream as;
+		AudioData ad;
+		ContinuousAudioDataStream loop = null;
 		if (screen == MENU) { //differing music for some screens
 			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));//insert background music file
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
 		}
 		if (screen == SELECT) {
 			as = new AudioStream(new FileInputStream("AdHeroes/select.mp3"));
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
 		}
 		if (screen == GAME) {
 			if (mappos == 0) { //different audio for each map
@@ -192,38 +186,25 @@ class GamePanel extends JPanel {
 			if (mappos == 2) {
 				as = new AudioStream(new FileInputStream("AdHeroes/thirdmap.mp3"));
 			}
-			if (mappos == 3) {
-				as = new AdioStream(new FileInputStream(""));
-			}
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
+			//if (mappos == 3) {
+			//	as = new AudioStream(new FileInputStream(""));
+			//}
 		}	
 		if (screen == INSTRUCTION) {
 			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
 		}
 		if (screen == CREDIT) {
 			as = new AudioStream(new FileInputStream("AdHeroes/creditsong.mp3"));
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
 		}
-		if (screen == WAIT) {
-			as = new AudioStream(new FileInputStream(""));
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
-		}
+		//if (screen == WAIT) {
+		//	as = new AudioStream(new FileInputStream(""));
+		//}
 		if (screen == END) {
 			as = new AudioStream(new FileInputStream("AdHeroes/menusong.mp3"));
-			ad = as.getData();
-			loop = new ContinuousAudioDataStream(ad);
-			ap.start(loop);
 		}
-		
+		ad = as.getData();
+		loop = new ContinuousAudioDataStream(ad);
+		ap.start(loop);
 		
 	}
 	
@@ -461,7 +442,13 @@ class GamePanel extends JPanel {
 	}
 	
 	public void drawCredit(Graphics g){//method to draw credit screen
-	
+		g.drawImage(screenimage[3], 0,0,1300,900,null);
+		if (undorect.contains(mouse)){
+   			imageInRect(g,undoimage[3],undorect);
+   		}
+   		else{
+   			imageInRect(g,undoimage[2],undorect);
+   		}
 	}
 	
 	public void drawEnd(Graphics g){//method to draw end screen
